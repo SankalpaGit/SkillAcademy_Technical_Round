@@ -1,0 +1,107 @@
+import { Link, NavLink } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Menu, X, BookText, CheckSquare, Compass, User } from 'lucide-react'
+import gsap from 'gsap'
+
+const Navbar = () => {
+  const [menuOpen, setMenuOpen] = useState(false)
+  const navRef = useRef(null)
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    if (menuOpen) {
+      gsap.fromTo(
+        menuRef.current,
+        { opacity: 0, y: -20 },
+        { opacity: 1, y: 0, duration: 0.4, ease: 'power2.out' }
+      )
+    } else {
+      gsap.to(menuRef.current, {
+        opacity: 0,
+        y: -20,
+        duration: 0.3,
+        ease: 'power2.in'
+      })
+    }
+  }, [menuOpen])
+
+  const navLinks = [
+    { to: '/blog', label: 'Blog' },
+    { to: '/todo', label: 'Task' },
+    { to: '/explore', label: 'Explore' },
+  ]
+
+  return (
+    <nav
+      ref={navRef}
+      className="bg-white text-gray-800 px-8 py-6 flex items-center justify-between shadow-md sticky top-0 z-30"
+    >
+      {/* Logo */}
+      <Link to="/" className="text-2xl font-bold tracking-wide text-blue-700">
+        Inkspire
+      </Link>
+
+      {/* Desktop Navigation */}
+      <div className="hidden md:flex space-x-12 items-center">
+        {navLinks.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            className={({ isActive }) =>
+              `relative text-base font-medium transition-all duration-300 pb-1 hover:text-blue-600 hover:scale-105 ${
+                isActive ? 'text-blue-700 border-b-2 border-blue-700' : ''
+              }`
+            }
+          >
+            {link.label}
+          </NavLink>
+        ))}
+      </div>
+
+      {/* Profile Icon */}
+      <NavLink
+        to="/profile"
+        className={({ isActive }) =>
+          `hidden md:block hover:text-blue-600 transition-colors ${isActive ? 'text-blue-700' : ''}`
+        }
+      >
+        <User size={24} />
+      </NavLink>
+
+      {/* Hamburger Button */}
+      <button className="md:hidden z-20" onClick={() => setMenuOpen(!menuOpen)}>
+        {menuOpen ? <X size={28} /> : <Menu size={28} />}
+      </button>
+
+      {/* Mobile Menu */}
+      <div
+        ref={menuRef}
+        className={`absolute top-20 left-0 w-full bg-white text-gray-800 flex flex-col items-center space-y-4 py-6 px-4 transition-opacity duration-300 z-10 md:hidden ${menuOpen ? 'block' : 'hidden'}`}
+      >
+        {navLinks.map((link) => (
+          <NavLink
+            key={link.to}
+            to={link.to}
+            onClick={() => setMenuOpen(false)}
+            className={({ isActive }) =>
+              `text-lg hover:text-blue-600 transition-colors ${isActive ? 'font-semibold underline' : ''}`
+            }
+          >
+            {link.label}
+          </NavLink>
+        ))}
+        <NavLink
+          to="/profile"
+          onClick={() => setMenuOpen(false)}
+          className={({ isActive }) =>
+            `text-lg hover:text-blue-600 transition-colors ${isActive ? 'font-semibold underline' : ''}`
+          }
+        >
+          <User className="inline mr-1" size={18} /> Profile
+        </NavLink>
+      </div>
+    </nav>
+  )
+}
+
+export default Navbar
