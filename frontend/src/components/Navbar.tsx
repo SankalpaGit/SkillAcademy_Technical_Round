@@ -34,7 +34,7 @@ const Navbar = () => {
   return (
     <nav
       ref={navRef}
-      className="bg-white text-gray-800 px-8 py-6 flex items-center justify-between shadow-md sticky top-0 z-30"
+      className="bg-white text-gray-800 px-8 py-5 flex items-center justify-between shadow-md sticky top-0 z-30"
     >
       {/* Logo */}
       <Link to="/" className="text-2xl font-bold tracking-wide text-indigo-500 lg:ml-16">

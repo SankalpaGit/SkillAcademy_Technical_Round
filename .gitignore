@@ -32,3 +32,6 @@ Thumbs.db
 # Migrations
 **/migrations/*.py
 !*/migrations/__init__.py
+
+# frontend/node_modules/
+frontend/node_modules/

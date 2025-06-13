@@ -121,11 +121,11 @@ const Landing = () => {
             {/* Hero Section */}
             <section
                 ref={heroRef}
-                className="relative bg-gradient-to-r from-indigo-500 to-purple-500 text-white overflow-hidden"
+                className="relative bg-gradient-to-r px-5 from-indigo-500 to-purple-500 text-white overflow-hidden"
             >
                 <div className="relative z-10 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 items-center gap-12">
                     <div className="flex flex-col items-start justify-center h-fit w-full md:ml-16">
-                        <h1 className="text-5xl font-extrabold leading-tight mb-6">
+                        <h1 className="text-5xl font-extrabold leading-tight mb-6 mt-6">
                             Empower Your Workflow with Modern Tools
                         </h1>
                         <p className="text-lg mb-6">
