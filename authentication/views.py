@@ -58,6 +58,7 @@ class CustomPasswordResetView(APIView):
                 request=request,
                 use_https=False,  # Use HTTP for local development
                 email_template_name='registration/password_reset_email.html',
+                html_email_template_name='registration/password_reset_email.html',
             )
             return JsonResponse({'message': 'Password reset email sent'}, status=200)
         else:
