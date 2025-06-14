@@ -1,57 +1,81 @@
 import React, { useState, useEffect } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 interface ProtectedRouteProps {
-    children: React.ReactNode;
+  children: React.ReactNode;
 }
 
 const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-    const [showModal, setShowModal] = useState(false);
-    const [redirect, setRedirect] = useState(false);
+  const [authStatus, setAuthStatus] = useState<"checking" | "authorized" | "unauthorized">("checking");
+  const [showModal, setShowModal] = useState(false);
+  const [shouldRedirect, setShouldRedirect] = useState(false);
 
-    // Check if the user is authenticated
-    const isAuthenticated = !!localStorage.getItem("access_token");
+  useEffect(() => {
+    const validateToken = async () => {
+      const token = localStorage.getItem("access_token");
 
-    useEffect(() => {
-        if (!isAuthenticated) {
-            setShowModal(true); // Show the modal if the user is not authenticated
+      if (!token) {
+        handleUnauthorized(); // No token case
+        return;
+      }
 
-            // Set a timeout to redirect after 5 seconds
-            const timer = setTimeout(() => {
-                setRedirect(true);
-            }, 5000);
+      try {
+        const response = await fetch("http://127.0.0.1:8000/api/todo/", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-            return () => clearTimeout(timer); // Cleanup the timer on unmount
+        if (response.ok) {
+          setAuthStatus("authorized");
+        } else {
+          handleUnauthorized();
         }
-    }, [isAuthenticated]);
+      } catch (error) {
+        console.error("Token validation error:", error);
+        handleUnauthorized();
+      }
+    };
 
-    if (isAuthenticated) {
-        return <>{children}</>;
-    }
+    const handleUnauthorized = () => {
+      localStorage.removeItem("access_token");
+      setAuthStatus("unauthorized");
+      setShowModal(true);
+      setTimeout(() => {
+        setShouldRedirect(true);
+      }, 5000);
+    };
 
-    if (redirect) {
-        return <Navigate to="/login" replace />;
-    }
+    validateToken();
+  }, []);
 
+  if (authStatus === "checking") {
     return (
-        <>
-            {showModal && (
-                <div className="fixed inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-50">
-                    <div className="bg-white p-6 rounded-xl shadow-lg w-[90%] max-w-md">
-                        <h2 className="text-2xl font-semibold text-red-800 mb-3">Access Denied</h2>
-                        <p className="text-gray-600 mb-6">You have to log in to access this page.</p>
-                        <Link
-                            to="/login"
-                            className="inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition"
-                        >
-                            Go to Login
-                        </Link>
-                    </div>
-                </div>
-            )}
-
-        </>
+      <div className="flex justify-center items-center h-screen">
+        <p className="text-gray-600">Validating access...</p>
+      </div>
     );
+  }
+
+  if (shouldRedirect) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (authStatus === "unauthorized" && showModal) {
+    return (
+      <div className="fixed inset-0 flex items-center justify-center  backdrop-blur-sm z-50">
+        <div className="bg-white p-6 rounded-xl shadow-lg w-[90%] max-w-md text-center">
+          <p className="text-gray-600 mb-6">
+            You are not authorized to access this page.<br />
+            Redirecting to login in <span className="font-semibold">Wait for some seconds</span>...
+          </p>
+          <div className="animate-pulse text-sm text-red-600">Expired session...</div>
+        </div>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

@@ -1,46 +1,52 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Calendar, Clock } from "lucide-react";
 
-const mockBlogs = [
-    {
-        title: "Exploring React Ecosystem",
-        description: "Dive deep into React, Redux, Hooks, and more.",
-        date: "2024-03-10",
-        readTime: "6 min read",
-        category: "Frontend",
-    },
-    {
-        title: "Understanding APIs",
-        description: "A beginner-friendly introduction to REST and GraphQL APIs.",
-        date: "2024-02-28",
-        readTime: "4 min read",
-        category: "Backend",
-    },
-    {
-        title: "Styling with Tailwind CSS",
-        description: "Learn how utility-first styling makes frontend fast and efficient.",
-        date: "2024-01-20",
-        readTime: "5 min read",
-        category: "UI/UX",
-    },
-];
+interface BlogItem {
+    id: number;
+    title: string;
+    content: string;
+    author: string;
+    published_date: string;
+}
 
 const Explore = () => {
+    const [blogs, setBlogs] = useState<BlogItem[]>([]);
+    const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState("");
     const [filterCategory, setFilterCategory] = useState("All");
 
-    const categories = ["All", ...new Set(mockBlogs.map((blog) => blog.category))];
+    // Fetch all blogs from the API
+    const fetchBlogs = async () => {
+        try {
+            const response = await fetch("http://127.0.0.1:8000/api/blog/", {
+                headers: {
+                    "Content-Type": "application/json",
+                },
+            });
 
-    const filteredBlogs = mockBlogs.filter((blog) => {
-        const matchesSearch =
-            blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            blog.description.toLowerCase().includes(searchQuery.toLowerCase());
+            if (response.ok) {
+                const data = await response.json();
+                console.log("Fetched blogs:", data);
+                setBlogs(data.results); // ✅ Correctly setting the array of blogs
+            } else {
+                console.error("Failed to fetch blogs");
+            }
+        } catch (error) {
+            console.error("Error fetching blogs:", error);
+        } finally {
+            setLoading(false);
+        }
+    };
 
-        const matchesCategory =
-            filterCategory === "All" || blog.category === filterCategory;
+    useEffect(() => {
+        fetchBlogs();
+    }, []);
 
-        return matchesSearch && matchesCategory;
-    });
+    // Filter blogs by search query
+    const filteredBlogs = blogs.filter((blog) =>
+        blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        blog.content.toLowerCase().includes(searchQuery.toLowerCase())
+    );
 
     return (
         <div className="max-w-5xl mx-auto px-4 py-10">
@@ -49,7 +55,7 @@ const Explore = () => {
                 Discover new content and features in our application.
             </p>
 
-            {/* Search & Filter */}
+            {/* Search Input */}
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4">
                 <input
                     type="text"
@@ -58,49 +64,36 @@ const Explore = () => {
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 />
-                <select
-                    value={filterCategory}
-                    onChange={(e) => setFilterCategory(e.target.value)}
-                    className="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                >
-                    {categories.map((cat, index) => (
-                        <option key={index} value={cat}>
-                            {cat}
-                        </option>
-                    ))}
-                </select>
             </div>
 
             {/* Blog Cards */}
             <div className="mt-8 grid gap-6 sm:grid-cols-2">
-                {filteredBlogs.length > 0 ? (
-                    filteredBlogs.map((blog, index) => (
+                {loading ? (
+                    <p className="text-gray-500 col-span-full">Loading blogs...</p>
+                ) : filteredBlogs.length > 0 ? (
+                    filteredBlogs.map((blog) => (
                         <div
-                            key={index}
+                            key={blog.id}
                             className="relative p-5 border rounded-lg bg-white shadow hover:shadow-md transition"
                         >
-                            <div className="flex flex-wrap gap-2 mb-2">
-
-                                <span className="text-sm text-indigo-600 font-semibold bg-indigo-100 px-3 py-1 rounded-full">
-                                    {blog.category}
-                                </span>
-                            </div>
                             <h2 className="text-xl font-semibold text-gray-800">
                                 {blog.title}
                             </h2>
-                            <p className="text-gray-600 text-sm">{blog.description}</p>
-                            <div className="flex items-center text-gray-500 text-sm gap-4 mt-2">
-                                <div className="flex items-center gap-1">
-                                    <Calendar size={16} /> {blog.date}
-                                </div>
-                                <div className="flex items-center gap-1">
-                                    <Clock size={16} /> {blog.readTime}
-                                </div>
+                            <p className="text-gray-600 text-sm mb-2">
+                                {blog.content.length > 150
+                                    ? `${blog.content.slice(0, 150)}...`
+                                    : blog.content}
+                            </p>
+                            <div className="flex items-center justify-between text-gray-500 text-sm">
+                                <span>By: {blog.author}</span>
+                                <span>
+                                    {new Date(blog.published_date).toLocaleDateString()}
+                                </span>
                             </div>
                         </div>
                     ))
                 ) : (
-                    <p className="text-gray-500 col-span-full">No results found.</p>
+                    <p className="text-gray-500 col-span-full">No blogs found.</p>
                 )}
             </div>
         </div>

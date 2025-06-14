@@ -1,62 +1,134 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ChangeEvent, FormEvent } from "react";
 import { Plus, X } from "lucide-react";
 
 interface TaskItem {
+  id?: number;
   title: string;
   description: string;
-  status: "completed" | "pending";
+  completed: boolean;
 }
 
 const Task = () => {
-  const [tasks, setTasks] = useState<TaskItem[]>([
-    {
-      title: "Build Todo Feature",
-      description: "Add task creation, filter and pagination",
-      status: "completed",
-    },
-  ]);
-
+  const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [filter, setFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
 
-  const [formData, setFormData] = useState<TaskItem>({
+  const [formData, setFormData] = useState<Omit<TaskItem, "completed">>({
     title: "",
     description: "",
-    status: "pending",
   });
 
   const toggleForm = () => setShowForm(!showForm);
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+  const fetchTasks = async () => {
+    const token = localStorage.getItem("access_token");
+
+    let url = "http://127.0.0.1:8000/api/todo/";
+
+    // Append query param based on filter
+    if (filter === "Completed") {
+      url += "?completed=true";
+    } else if (filter === "Pending") {
+      url += "?completed=false";
+    }
+
+    try {
+      const response = await fetch(url, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        const sorted = data.results.sort(
+          (a: any, b: any) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        setTasks(sorted);
+      } else {
+        console.error("Failed to fetch tasks");
+      }
+    } catch (error) {
+      console.error("Error fetching tasks:", error);
+    }
+  };
+
+
+  useEffect(() => {
+    fetchTasks();
+  }, [filter]);
+
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSubmit = (e: FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    setTasks([formData, ...tasks]);
-    setFormData({ title: "", description: "", status: "pending" });
-    setShowForm(false);
+    const token = localStorage.getItem("access_token");
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/todo/", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ ...formData, completed: false }),
+      });
+
+      if (response.ok) {
+        setFormData({ title: "", description: "" });
+        setShowForm(false);
+        fetchTasks(); // re-fetch to update list
+      } else {
+        console.error("Failed to add task");
+      }
+    } catch (error) {
+      console.error("Error adding task:", error);
+    }
   };
 
-  const markAsCompleted = (indexOnPage: number) => {
-    const globalIndex = (currentPage - 1) * itemsPerPage + indexOnPage;
-    const updated: TaskItem[] = [...tasks];
-    updated[globalIndex].status = "completed";
-    setTasks(updated);
+  const toggleCompleted = async (id: number, currentStatus: boolean) => {
+    const token = localStorage.getItem("access_token");
+    const task = tasks.find((task) => task.id === id);
+    if (!task) return;
+
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/todo/${id}/`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          title: task.title,
+          description: task.description,
+          completed: !currentStatus,
+        }),
+      });
+
+      if (response.ok) {
+        fetchTasks(); // refresh list
+      } else {
+        console.error("Failed to update task");
+      }
+    } catch (error) {
+      console.error("Error updating task:", error);
+    }
   };
 
   const filteredTasks =
     filter === "All"
       ? tasks
       : tasks.filter((task) =>
-          filter === "Completed"
-            ? task.status === "completed"
-            : task.status === "pending"
-        );
+        filter === "Completed" ? task.completed : !task.completed
+      );
 
   const totalPages = Math.ceil(filteredTasks.length / itemsPerPage);
   const paginatedTasks = filteredTasks.slice(
@@ -88,11 +160,10 @@ const Task = () => {
               setFilter(f);
               setCurrentPage(1);
             }}
-            className={`px-3 py-1 rounded-full text-sm ${
-              filter === f
-                ? "bg-indigo-700 text-white"
-                : "bg-gray-200 text-gray-800"
-            }`}
+            className={`px-3 py-1 rounded-full text-sm ${filter === f
+              ? "bg-indigo-700 text-white"
+              : "bg-gray-200 text-gray-800"
+              }`}
           >
             {f}
           </button>
@@ -102,9 +173,9 @@ const Task = () => {
       {/* Task Cards */}
       <div className="space-y-4">
         {paginatedTasks.length > 0 ? (
-          paginatedTasks.map((task, index) => (
+          paginatedTasks.map((task) => (
             <div
-              key={index}
+              key={task.id}
               className="border p-5 rounded-lg shadow bg-white hover:shadow-md transition"
             >
               <div className="flex items-center justify-between mb-2">
@@ -112,25 +183,22 @@ const Task = () => {
                   {task.title}
                 </h2>
                 <span
-                  className={`text-xs px-2 py-1 rounded-full ${
-                    task.status === "completed"
-                      ? "bg-green-100 text-green-800"
-                      : "bg-yellow-100 text-yellow-800"
-                  }`}
+                  className={`text-xs px-2 py-1 rounded-full ${task.completed
+                    ? "bg-green-100 text-green-800"
+                    : "bg-yellow-100 text-yellow-800"
+                    }`}
                 >
-                  {task.status}
+                  {task.completed ? "Completed" : "Pending"}
                 </span>
               </div>
               <p className="text-gray-600 mb-2">{task.description}</p>
 
-              {task.status === "pending" && (
-                <button
-                  onClick={() => markAsCompleted(index)}
-                  className="text-sm text-indigo-600 hover:underline"
-                >
-                  Mark as Completed
-                </button>
-              )}
+              <button
+                onClick={() => toggleCompleted(task.id!, task.completed)}
+                className="text-sm text-indigo-600 hover:underline"
+              >
+                Mark as {task.completed ? "Pending" : "Completed"}
+              </button>
             </div>
           ))
         ) : (
@@ -145,11 +213,10 @@ const Task = () => {
             <button
               key={i}
               onClick={() => setCurrentPage(i + 1)}
-              className={`w-8 h-8 rounded-full text-sm ${
-                currentPage === i + 1
-                  ? "bg-indigo-700 text-white"
-                  : "bg-gray-200 text-gray-800"
-              }`}
+              className={`w-8 h-8 rounded-full text-sm ${currentPage === i + 1
+                ? "bg-indigo-700 text-white"
+                : "bg-gray-200 text-gray-800"
+                }`}
             >
               {i + 1}
             </button>
@@ -187,15 +254,6 @@ const Task = () => {
                 className="w-full px-3 py-2 border rounded-md"
                 required
               ></textarea>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border rounded-md"
-              >
-                <option value="pending">Pending</option>
-                <option value="completed">Completed</option>
-              </select>
               <button
                 type="submit"
                 className="bg-indigo-700 text-white px-4 py-2 rounded-md hover:bg-indigo-800"
