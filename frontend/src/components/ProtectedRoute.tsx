@@ -36,19 +36,20 @@ const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
     return (
         <>
             {showModal && (
-                <div className="fixed inset-0 flex items-center justify-center backdrop-blur-sm z-50">
-                    <div className="p-6 rounded shadow-md">
-                        <h2 className="text-lg font-bold mb-2">Access Denied</h2>
-                        <p>You have to be a member of GyanAnchal to access this page.</p>
+                <div className="fixed inset-0 flex items-center justify-center bg-white/60 backdrop-blur-sm z-50">
+                    <div className="bg-white p-6 rounded-xl shadow-lg w-[90%] max-w-md">
+                        <h2 className="text-2xl font-semibold text-red-800 mb-3">Access Denied</h2>
+                        <p className="text-gray-600 mb-6">You have to log in to access this page.</p>
                         <Link
                             to="/login"
-                            className="mt-4 inline-block bg-purple-500 text-white px-4 py-2 rounded hover:bg-purple-600"
+                            className="inline-block bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium px-6 py-2 rounded-lg transition"
                         >
-                            Login
+                            Go to Login
                         </Link>
                     </div>
                 </div>
             )}
+
         </>
     );
 };

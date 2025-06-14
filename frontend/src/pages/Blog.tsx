@@ -1,64 +1,108 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus, Edit2, Trash2, Calendar, Clock, X } from "lucide-react";
 
 const Blog = () => {
   const [showForm, setShowForm] = useState(false);
-  const [blogs, setBlogs] = useState([
-    {
-      title: "My Journey into Web Development",
-      description:
-        "How I started learning web development and the challenges I faced along the way.",
-      date: "2024-01-15",
-      readTime: "5 min read",
-      category: "Personal",
-    },
-    {
-      title: "Tips for Better Code Organization",
-      description:
-        "Best practices I've learned for keeping code clean and maintainable.",
-      date: "2024-01-10",
-      readTime: "7 min read",
-      category: "Development",
-    },
-  ]);
-
+  const [blogs, setBlogs] = useState([]);
   const [formData, setFormData] = useState({
     title: "",
-    category: "",
-    description: "",
+    content: "",
   });
+  const [editMode, setEditMode] = useState(false);
+  const [editBlogId, setEditBlogId] = useState<number | null>(null);
 
   const toggleForm = () => setShowForm(!showForm);
 
-
-  interface BlogFormData {
-    title: string;
-    category: string;
-    description: string;
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setFormData((prev: BlogFormData) => ({ ...prev, [name]: value }));
+  const fetchBlogs = async () => {
+    const token = localStorage.getItem("access_token");
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/blog/my_posts/", {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setBlogs(data);
+      } else {
+        console.error("Failed to fetch blogs");
+      }
+    } catch (error) {
+      console.error("Error fetching blogs:", error);
+    }
   };
 
-  interface NewBlog extends BlogFormData {
-    date: string;
-    readTime: string;
-    status: string;
-  }
+  useEffect(() => {
+    fetchBlogs();
+  }, []);
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const newBlog: NewBlog = {
-      ...formData,
-      date: new Date().toISOString().split("T")[0],
-      readTime: "3 min read",
-      status: "draft",
-    };
-    setBlogs([newBlog, ...blogs]);
-    setFormData({ title: "", category: "", description: "" });
+    const token = localStorage.getItem("access_token");
+    const url = editMode
+      ? `http://127.0.0.1:8000/api/blog/${editBlogId}/`
+      : "http://127.0.0.1:8000/api/blog/";
+    const method = editMode ? "PUT" : "POST";
+
+    try {
+      const response = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (response.ok) {
+        fetchBlogs(); // Refresh the blog list
+        setFormData({ title: "", content: "" });
+        setEditMode(false);
+        setEditBlogId(null);
+        toggleForm();
+      } else {
+        console.error("Failed to submit blog");
+      }
+    } catch (error) {
+      console.error("Error submitting blog:", error);
+    }
+  };
+
+  const handleEdit = (blog: any) => {
+    setFormData({
+      title: blog.title,
+      content: blog.content,
+    });
+    setEditMode(true);
+    setEditBlogId(blog.id);
     toggleForm();
+  };
+
+  const handleDelete = async (id: number) => {
+    const token = localStorage.getItem("access_token");
+    try {
+      const response = await fetch(`http://127.0.0.1:8000/api/blog/${id}/`, {
+        method: "DELETE",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        fetchBlogs(); // Refresh the blog list
+      } else {
+        console.error("Failed to delete blog");
+      }
+    } catch (error) {
+      console.error("Error deleting blog:", error);
+    }
   };
 
   return (
@@ -87,7 +131,7 @@ const Blog = () => {
               <X />
             </button>
             <h2 className="text-xl font-semibold text-indigo-700 mb-4">
-              Create a New Blog
+              {editMode ? "Edit Blog" : "Create a New Blog"}
             </h2>
             <form className="space-y-4" onSubmit={handleSubmit}>
               <input
@@ -99,19 +143,11 @@ const Blog = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 required
               />
-              <input
-                type="text"
-                name="category"
-                placeholder="Category"
-                value={formData.category}
-                onChange={handleChange}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
-                required
-              />
+              
               <textarea
-                name="description"
-                placeholder="Blog Description"
-                value={formData.description}
+                name="content"
+                placeholder="Blog Content"
+                value={formData.content}
                 onChange={handleChange}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 rows={4}
@@ -121,7 +157,7 @@ const Blog = () => {
                 type="submit"
                 className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700"
               >
-                Submit
+                {editMode ? "Update" : "Submit"}
               </button>
             </form>
           </div>
@@ -130,33 +166,33 @@ const Blog = () => {
 
       {/* Blog Cards */}
       <div className="space-y-6">
-        {blogs.map((blog, index) => (
+        {blogs.map((blog: any, index) => (
           <div
             key={index}
             className="relative p-5 border rounded-lg bg-white shadow hover:shadow-md transition"
           >
             {/* Edit/Delete Top-Right */}
             <div className="absolute top-3 right-3 flex gap-2">
-              <Edit2 className="cursor-pointer text-indigo-500 hover:text-indigo-700" />
-              <Trash2 className="cursor-pointer text-red-500 hover:text-red-700" />
+              <Edit2
+                className="cursor-pointer text-indigo-500 hover:text-indigo-700"
+                onClick={() => handleEdit(blog)}
+              />
+              <Trash2
+                className="cursor-pointer text-red-500 hover:text-red-700"
+                onClick={() => handleDelete(blog.id)}
+              />
             </div>
 
             <div className="flex flex-wrap gap-2 mb-2">
               
-              <span className=" text-gray-600 text-xs px-2 py-1 rounded-full bg-amber-100 border border-amber-400">
-                {blog.category}
-              </span>
             </div>
             <h2 className="text-xl font-semibold text-gray-800">
               {blog.title}
             </h2>
-            <p className="text-gray-600 text-sm">{blog.description}</p>
+            <p className="text-gray-600 text-sm">{blog.content}</p>
             <div className="flex items-center text-gray-500 text-sm gap-4 mt-2">
               <div className="flex items-center gap-1">
-                <Calendar size={16} /> {blog.date}
-              </div>
-              <div className="flex items-center gap-1">
-                <Clock size={16} /> {blog.readTime}
+                <Calendar size={16} /> {blog.published_date || blog.date}
               </div>
             </div>
           </div>
