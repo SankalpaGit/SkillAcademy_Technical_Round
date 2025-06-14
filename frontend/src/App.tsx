@@ -10,6 +10,7 @@ import Login from "./pages/Login"
 import ProtectedRoute from "./components/ProtectedRoute"
 import PasswordResetRequest from "./pages/PasswordResetRequest"
 import ResetPassword from "./pages/ResetPassword"
+import BlogDetail from "./pages/BlogDetail"
 
 function App() {
   return (
@@ -44,7 +45,12 @@ function App() {
           </ProtectedRoute>
         } />
         <Route path="auth/password_reset/" element={<PasswordResetRequest />} />
-                        <Route path="/reset-password/:uid/:token/" element={<ResetPassword />} />
+        <Route path="/reset-password/:uid/:token/" element={<ResetPassword />} />
+        <Route path="/blog/:id" element={
+          <ProtectedRoute>
+            <BlogDetail />
+          </ProtectedRoute>
+        } />
         {/** Protected Routes ends here **/}
       </Routes>
     </div>

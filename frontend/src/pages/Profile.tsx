@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
-import { Mail, User, Calendar, Pencil, Lock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Mail, User, Calendar, Pencil, Lock, LogOut } from "lucide-react";
 
 const Profile = () => {
   const [profile, setProfile] = useState({
@@ -11,8 +12,8 @@ const Profile = () => {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [formData, setFormData] = useState(profile);
+  const navigate = useNavigate();
 
-  // Fetch profile data
   const fetchProfile = async () => {
     const token = localStorage.getItem("access_token");
     try {
@@ -22,11 +23,10 @@ const Profile = () => {
           Authorization: `Bearer ${token}`,
         },
       });
-
       if (response.ok) {
         const data = await response.json();
         setProfile(data);
-        setFormData(data); // Initialize form data with profile data
+        setFormData(data);
       } else {
         console.error("Failed to fetch profile data");
       }
@@ -41,13 +41,11 @@ const Profile = () => {
     fetchProfile();
   }, []);
 
-  // Handle input changes
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Submit updated profile data
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem("access_token");
@@ -60,11 +58,10 @@ const Profile = () => {
         },
         body: JSON.stringify(formData),
       });
-
       if (response.ok) {
         const updatedProfile = await response.json();
         setProfile(updatedProfile);
-        setEditing(false); // Exit edit mode
+        setEditing(false);
       } else {
         console.error("Failed to update profile");
       }
@@ -73,9 +70,14 @@ const Profile = () => {
     }
   };
 
-  // Redirect to the password reset page
   const handlePasswordReset = () => {
     window.location.href = "/auth/password_reset/";
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("access_token");
+    localStorage.removeItem("refresh_token");
+    navigate("/login");
   };
 
   if (loading) {
@@ -83,37 +85,48 @@ const Profile = () => {
   }
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-10">
-      <h1 className="text-3xl font-bold text-indigo-700 mb-6">My Profile</h1>
-
-      <div className="grid md:grid-cols-3 gap-6 bg-white p-6 rounded-lg shadow">
-        {/* Avatar + Buttons */}
-        <div className="flex flex-col items-center gap-4">
+    <div className="max-w-6xl mx-auto p-6 sm:p-10">
+      <h1 className="text-3xl font-semibold text-gray-800 mb-8">Account Settings</h1>
+      
+      <div className="flex flex-col md:flex-row gap-8">
+        {/* Sidebar */}
+        <aside className="md:w-1/3 bg-white p-6 rounded-lg shadow-md text-center">
           <img
             src="https://i.pravatar.cc/150?img=47"
-            alt="User Avatar"
-            className="w-32 h-32 rounded-full object-cover border-4 border-indigo-300"
+            alt="Avatar"
+            className="w-28 h-28 rounded-full mx-auto border-4 border-indigo-200 object-cover"
           />
-          <div className="flex flex-col gap-2 w-full">
+          <h2 className="mt-4 text-xl font-medium text-gray-900">{profile.username}</h2>
+          <p className="text-sm text-gray-600">{profile.email}</p>
+
+          <div className="mt-6 space-y-3">
             <button
               onClick={() => setEditing(true)}
-              className="flex items-center justify-center gap-2 bg-indigo-700 text-white py-2 px-4 rounded-md hover:bg-indigo-800 transition"
+              className="w-full bg-indigo-600 hover:bg-indigo-700 text-white py-2 rounded-md flex items-center justify-center gap-2"
             >
-              <Pencil size={16} />
-              Edit Profile
+              <Pencil size={16} /> Edit Profile
             </button>
             <button
               onClick={handlePasswordReset}
-              className="flex items-center justify-center gap-2 bg-gray-100 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-200 transition"
+              className="w-full bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 rounded-md flex items-center justify-center gap-2"
             >
-              <Lock size={16} />
-              Change Password
+              <Lock size={16} /> Change Password
+            </button>
+            <button
+              onClick={handleLogout}
+              className="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-md flex items-center justify-center gap-2"
+            >
+              <LogOut size={16} /> Logout
             </button>
           </div>
-        </div>
+        </aside>
 
-        {/* Info */}
-        <div className="md:col-span-2 flex flex-col justify-center">
+        {/* Main Content */}
+        <section className="md:w-2/3 bg-white p-6 rounded-lg shadow-md">
+          <h3 className="text-lg font-medium text-gray-700 mb-4">
+            {editing ? "Edit Your Profile" : "Profile Information"}
+          </h3>
+
           {editing ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
@@ -123,7 +136,7 @@ const Profile = () => {
                   name="username"
                   value={formData.username}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 />
               </div>
@@ -134,7 +147,7 @@ const Profile = () => {
                   name="email"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-md"
+                  className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   required
                 />
               </div>
@@ -144,41 +157,43 @@ const Profile = () => {
                   name="bio"
                   value={formData.bio}
                   onChange={handleChange}
-                  className="w-full px-3 py-2 border rounded-md"
                   rows={4}
-                ></textarea>
+                  className="w-full border border-gray-300 px-3 py-2 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                />
               </div>
-              <button
-                type="submit"
-                className="bg-indigo-700 text-white px-4 py-2 rounded-md hover:bg-indigo-800"
-              >
-                Save Changes
-              </button>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md"
+                >
+                  Save Changes
+                </button>
+              </div>
             </form>
           ) : (
-            <div className="space-y-4">
-              <div className="flex items-center gap-3 text-gray-800">
+            <div className="space-y-5 text-gray-700">
+              <div className="flex items-center gap-2">
                 <User size={18} className="text-indigo-600" />
                 <span className="font-medium">Username:</span>
                 <span>{profile.username}</span>
               </div>
-              <div className="flex items-center gap-3 text-gray-800">
+              <div className="flex items-center gap-2">
                 <Mail size={18} className="text-indigo-600" />
                 <span className="font-medium">Email:</span>
                 <span>{profile.email}</span>
               </div>
-              <div className="flex items-center gap-3 text-gray-800">
+              <div className="flex items-center gap-2">
                 <Calendar size={18} className="text-indigo-600" />
                 <span className="font-medium">Joined:</span>
-                <span>{new Date(profile.date_joined).toLocaleString()}</span>
+                <span>{new Date(profile.date_joined).toLocaleDateString()}</span>
               </div>
-              <div className="flex items-start gap-3 text-gray-800">
-                <span className="text-indigo-600 font-semibold">Bio:</span>
-                <span>{profile.bio}</span>
+              <div>
+                <p className="font-medium text-indigo-600 mb-1">Bio:</p>
+                <p className="text-gray-800">{profile.bio || "No bio available."}</p>
               </div>
             </div>
           )}
-        </div>
+        </section>
       </div>
     </div>
   );

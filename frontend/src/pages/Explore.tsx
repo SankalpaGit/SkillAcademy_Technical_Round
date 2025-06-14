@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Calendar, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface BlogItem {
     id: number;
@@ -12,8 +12,8 @@ interface BlogItem {
 const Explore = () => {
     const [blogs, setBlogs] = useState<BlogItem[]>([]);
     const [loading, setLoading] = useState(true);
-    const [searchQuery, setSearchQuery] = useState("");
-    const [filterCategory, setFilterCategory] = useState("All");
+    const [searchQuery, setSearchQuery] = useState(""); // State for search query
+    const navigate = useNavigate();
 
     // Fetch all blogs from the API
     const fetchBlogs = async () => {
@@ -26,8 +26,7 @@ const Explore = () => {
 
             if (response.ok) {
                 const data = await response.json();
-                console.log("Fetched blogs:", data);
-                setBlogs(data.results); // ✅ Correctly setting the array of blogs
+                setBlogs(data.results); // Assuming the API returns a paginated response
             } else {
                 console.error("Failed to fetch blogs");
             }
@@ -42,10 +41,9 @@ const Explore = () => {
         fetchBlogs();
     }, []);
 
-    // Filter blogs by search query
+    // Filter blogs based on the search query
     const filteredBlogs = blogs.filter((blog) =>
-        blog.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        blog.content.toLowerCase().includes(searchQuery.toLowerCase())
+        blog.title.toLowerCase().includes(searchQuery.toLowerCase())
     );
 
     return (
@@ -59,9 +57,9 @@ const Explore = () => {
             <div className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4">
                 <input
                     type="text"
-                    placeholder="Search blogs..."
+                    placeholder="Search blogs by title..."
                     value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
+                    onChange={(e) => setSearchQuery(e.target.value)} // Update search query
                     className="flex-1 px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 />
             </div>
@@ -90,6 +88,12 @@ const Explore = () => {
                                     {new Date(blog.published_date).toLocaleDateString()}
                                 </span>
                             </div>
+                            <button
+                                onClick={() => navigate(`/blog/${blog.id}`)}
+                                className="mt-4 text-indigo-600 hover:underline"
+                            >
+                                Read More
+                            </button>
                         </div>
                     ))
                 ) : (

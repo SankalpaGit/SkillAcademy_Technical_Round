@@ -143,7 +143,7 @@ const Blog = () => {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-300"
                 required
               />
-              
+
               <textarea
                 name="content"
                 placeholder="Blog Content"
@@ -184,7 +184,7 @@ const Blog = () => {
             </div>
 
             <div className="flex flex-wrap gap-2 mb-2">
-              
+
             </div>
             <h2 className="text-xl font-semibold text-gray-800">
               {blog.title}
@@ -192,7 +192,7 @@ const Blog = () => {
             <p className="text-gray-600 text-sm">{blog.content}</p>
             <div className="flex items-center text-gray-500 text-sm gap-4 mt-2">
               <div className="flex items-center gap-1">
-                <Calendar size={16} /> {blog.published_date || blog.date}
+                <Calendar size={16} /> {blog.published_date.split("T")[0]}
               </div>
             </div>
           </div>
