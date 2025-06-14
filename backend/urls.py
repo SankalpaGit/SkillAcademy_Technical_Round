@@ -14,6 +14,7 @@ urlpatterns = [
     path('api/token/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
 
     # User App
+    path('auth/', include('django.contrib.auth.urls')),
     path('api/users/', include('authentication.urls')),
 
     # Blog App
@@ -21,9 +22,6 @@ urlpatterns = [
 
     # Todo App
     path('api/todo/', include('todo.urls')),
-
-    # Password Reset (Django built-in)
-    path('auth/', include('django.contrib.auth.urls')),
 
     # API Root
     path('', api_root, name='api_root'),

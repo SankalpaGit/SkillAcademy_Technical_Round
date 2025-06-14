@@ -60,7 +60,6 @@ const Profile = () => {
         },
         body: JSON.stringify(formData),
       });
-      console.log(response);
 
       if (response.ok) {
         const updatedProfile = await response.json();
@@ -72,6 +71,11 @@ const Profile = () => {
     } catch (error) {
       console.error("Error updating profile:", error);
     }
+  };
+
+  // Redirect to the password reset page
+  const handlePasswordReset = () => {
+    window.location.href = "/auth/password_reset/";
   };
 
   if (loading) {
@@ -98,7 +102,10 @@ const Profile = () => {
               <Pencil size={16} />
               Edit Profile
             </button>
-            <button className="flex items-center justify-center gap-2 bg-gray-100 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-200 transition">
+            <button
+              onClick={handlePasswordReset}
+              className="flex items-center justify-center gap-2 bg-gray-100 text-gray-800 py-2 px-4 rounded-md hover:bg-gray-200 transition"
+            >
               <Lock size={16} />
               Change Password
             </button>
@@ -110,7 +117,7 @@ const Profile = () => {
           {editing ? (
             <form onSubmit={handleSubmit} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700">First Name</label>
+                <label className="block text-sm font-medium text-gray-700">Username</label>
                 <input
                   type="text"
                   name="username"
@@ -120,7 +127,6 @@ const Profile = () => {
                   required
                 />
               </div>
-
               <div>
                 <label className="block text-sm font-medium text-gray-700">Email</label>
                 <input
@@ -153,10 +159,8 @@ const Profile = () => {
             <div className="space-y-4">
               <div className="flex items-center gap-3 text-gray-800">
                 <User size={18} className="text-indigo-600" />
-                <span className="font-medium">Full Name:</span>
-                <span>
-                  {profile.username}
-                </span>
+                <span className="font-medium">Username:</span>
+                <span>{profile.username}</span>
               </div>
               <div className="flex items-center gap-3 text-gray-800">
                 <Mail size={18} className="text-indigo-600" />

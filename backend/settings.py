@@ -1,5 +1,6 @@
 from pathlib import Path
 from datetime import timedelta
+import os
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -11,7 +12,7 @@ SECRET_KEY = 'django-insecure-ul1g==x*fr=-f^g@=%!uhe0o-n%wrgg2yuech)o9xuw3=_=z65
 DEBUG = True
 
 ALLOWED_HOSTS = []
-
+USE_HTTPS = False
 
 # Application definition
 INSTALLED_APPS = [
@@ -41,12 +42,14 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+SITE_ID = 1
+
 ROOT_URLCONF = 'backend.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')], 
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -84,17 +87,30 @@ REST_FRAMEWORK = {
     'PAGE_SIZE': 10,
 }
 
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+EMAIL_HOST = "smtp.gmail.com"  # Use your email provider's SMTP server
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = "joshisankalpa2@gmail.com"  # Your email address
+EMAIL_HOST_PASSWORD = "pcee bzmf shst yjuh"  # Your email password
+
 
 # Simple JWT settings
 SIMPLE_JWT = {
     "ACCESS_TOKEN_LIFETIME": timedelta(minutes=30),
     "REFRESH_TOKEN_LIFETIME": timedelta(days=1),
 }
-
+CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_ALL_ORIGINS = True
-
-
+CORS_ALLOW_HEADERS = [
+    "content-type",
+    "x-csrftoken",
+    "authorization",
+]
+CSRF_TRUSTED_ORIGINS = [
+    "http://localhost:5173",  # React frontend
+    "http://127.0.0.1:5173",  # React frontend
+]
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [

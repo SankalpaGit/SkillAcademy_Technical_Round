@@ -166,70 +166,12 @@ const Landing = () => {
                 </div>
             </section>
 
-            {/* Blog Section */}
-            <section ref={blogRef} className="bg-white py-10">
-                <div className="max-w-6xl mx-auto px-4 text-center">
-                    <h2 className="text-4xl font-bold mb-4">Featured Blogs</h2>
-                    <p className="text-lg text-gray-600 mb-12">
-                        Read our latest thoughts and tutorials.
-                    </p>
-                    <div className="grid md:grid-cols-3 gap-8 text-left">
-                        {blogs.map((b, idx) => (
-                            <div
-                                key={idx}
-                                className="bg-gray-50 border border-gray-600 p-6 rounded-xl shadow hover:shadow-lg"
-                            >
-                                <span className="text-sm text-indigo-600 font-semibold bg-indigo-100 px-3 py-1 rounded-full">
-                                    {b.category}
-                                </span>
-                                <h3 className="text-xl font-bold mt-4">{b.title}</h3>
-
-                                {/* Blog Excerpt */}
-                                <p className="text-gray-700 mt-3 text-sm text-justify">
-                                    {b.description}
-                                    </p>
-
-                                <div className="mt-6 flex items-center justify-between">
-                                    {/* Author and Date */}
-                                    <div className="flex  md:1/2 gap-2">
-                                        <div className="flex items-center justify-center">
-                                            <PenLine className="text-3xl  text-indigo-600" />
-                                        </div>
-                                        <div className="">
-                                            <p className="text-sm font-semibold text-gray-600">By {b.author}</p>
-                                            <p className="text-[14px] text-gray-500">{b.date}</p>
-                                        </div>
-                                    </div>
-
-                                    <div>
-                                        {/* Read More */}
-                                        <Link
-                                            to="/blog"
-                                            className="inline-block mt-4 text-indigo-600 underline font-semibold hover:underline"
-                                        >
-                                            Read More
-                                        </Link>
-                                    </div>
-                                </div>
-
-
-                            </div>
-                        ))}
-                    </div>
-
-                    <Link to="/blog" className="inline-block mt-10">
-                        <button className="bg-indigo-600 text-white px-6 py-3 rounded-xl shadow-md hover:bg-indigo-700">
-                            View All Blogs
-                        </button>
-                    </Link>
-                </div>
-            </section>
 
             {/* Footer */}
             <footer className="bg-indigo-500 text-white py-10">
                 <div className="max-w-6xl mx-auto px-4 text-center">
                     <p className="text-sm">
-                        &copy; {currentYear} GyanAnchal. All rights reserved.
+                        &copy; {currentYear} GyanPatra. All rights reserved.
                     </p>
                 </div>
             </footer>

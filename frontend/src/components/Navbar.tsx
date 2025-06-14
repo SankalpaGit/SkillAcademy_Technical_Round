@@ -38,7 +38,7 @@ const Navbar = () => {
     >
       {/* Logo */}
       <Link to="/" className="text-2xl font-bold tracking-wide text-indigo-500 lg:ml-16">
-        GyanAnchal
+        GyanPatra
       </Link>
 
       {/* Desktop Navigation */}
