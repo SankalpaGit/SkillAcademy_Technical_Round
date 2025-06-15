@@ -1,8 +1,7 @@
 import { useEffect, useRef } from "react";
-import { Code, Zap, Shield, PenLine, Calendar } from "lucide-react";
+import { Code, Zap, Shield} from "lucide-react";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { Link } from "react-router-dom";
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -13,13 +12,6 @@ interface Feature {
     bgColor: string;
 }
 
-interface Blog {
-    category: string;
-    title: string;
-    author: string;
-    date: string;
-    description: string;
-}
 
 const features: Feature[] = [
     {
@@ -42,29 +34,7 @@ const features: Feature[] = [
     },
 ];
 
-const blogs: Blog[] = [
-    {
-        category: "Development",
-        title: "Getting Started with Modern Web Development",
-        author: "Sarah Johnson",
-        date: "Jan-15-2024",
-        description: "A comprehensive guide to modern web development practices. Learn the latest tools and frameworks to build efficient web applications.",
-    },
-    {
-        category: "Productivity",
-        title: "Productivity Tips for Remote Workers",
-        author: "Mike Chen",
-        date: "Feb-10-2024",
-        description: "Explore effective strategies to enhance your productivity while working from home. From time management to workspace setup.",
-    },
-    {
-        category: "Technology",
-        title: "The Future of AI in Content Creation",
-        author: "Emma Davis",
-        date: "Jun-23-2024",
-        description: "An in-depth look at how AI is transforming the landscape of content creation. Discover the tools and technologies shaping the future.",
-    },
-];
+
 
 const Landing = () => {
     const heroRef = useRef<HTMLDivElement>(null);

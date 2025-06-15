@@ -51,7 +51,7 @@ const Login = () => {
             <div className="hidden md:flex md:w-[40%] lg:w-[35%] flex-col items-center justify-center px-4 text-center">
                 <h1 className="text-3xl font-bold text-indigo-700 mb-4">Welcome Back!</h1>
                 <p className="text-gray-700 text-base">
-                    Login to access your dashboard and manage your content on GyanAnchal.
+                    Login to access your dashboard and manage your content on GyanPatra.
                 </p>
             </div>
 

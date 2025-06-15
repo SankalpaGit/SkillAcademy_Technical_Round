@@ -1,0 +1,41 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: .  # Set the build context to the root directory
+      dockerfile: ./backend/Dockerfile
+    container_name: django_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    env_file:
+      - ./backend/.env  # Load environment variables from the backend's .env file
+    depends_on:
+      - db
+
+  frontend:
+    build:
+      context: .  # set the build context to the frontend directory
+      dockerfile: ./frontend/Dockerfile  # Specify the Dockerfile inside the frontend folder
+    container_name: react_frontend
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./frontend:/app  # Mount the frontend directory into the container
+    stdin_open: true
+    tty: true
+
+  db:
+    image: postgres:15
+    container_name: postgres_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    env_file:
+      - ./backend/.env  # Explicitly load the .env file for the db service
+
+volumes:
+  postgres_data:

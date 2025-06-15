@@ -1,4 +1,4 @@
-# 🧠 Django DRF Blog & Todo API Project
+# Skill Academy Technical round
 
 A complete Django backend project that demonstrates:
 
@@ -56,4 +56,53 @@ A complete Django backend project that demonstrates:
 
 ```bash
 git clone https://github.com/SankalpaGit/SkillAcademy_Technical_Round.git
+cd SkillAcademy_Technical_Round
+
+```
+
+### Setup & Activate Python Virtual Environment
+```bash
+python3 -m venv .venv
+source .venv/bin/activate   # macOS/Linux
+# .venv\Scripts\activate    # Windows PowerShell
+```
+
+## Install Python Dependencies
+```bash
+pip install --upgrade pip
+pip install -r requirements.txt
+```
+
+## Configure Database (PostgreSQL) and SMTP
+create .env file inside backend
+
+```bash
+# SMTP Configuration
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=yourgmail
+EMAIL_HOST_PASSWORD=apppasswordhere
+
+# Database Configuration
+DB_NAME=Skill
+DB_USER=databae name
+DB_PASSWORD=pass
+DB_HOST=localhost
+DB_PORT=5432
+```
+
+## Django Settings & Migrations and server
+```bash
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+
+```
+
+## stup frontend
+```bash
+cd frontend
+npm install
+npm run dev
 ```
