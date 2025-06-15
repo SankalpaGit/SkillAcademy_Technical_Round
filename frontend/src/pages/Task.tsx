@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import type { ChangeEvent, FormEvent } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, X, Edit2, Trash2 } from "lucide-react";
 
 interface TaskItem {
   id?: number;
@@ -12,6 +12,10 @@ interface TaskItem {
 const Task = () => {
   const [tasks, setTasks] = useState<TaskItem[]>([]);
   const [showForm, setShowForm] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteTaskId, setDeleteTaskId] = useState<number | null>(null);
+  const [editMode, setEditMode] = useState(false);
+  const [editTaskId, setEditTaskId] = useState<number | null>(null);
   const [filter, setFilter] = useState("All");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 3;
@@ -57,7 +61,6 @@ const Task = () => {
     }
   };
 
-
   useEffect(() => {
     fetchTasks();
   }, [filter]);
@@ -72,9 +75,14 @@ const Task = () => {
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     const token = localStorage.getItem("access_token");
+    const url = editMode
+      ? `http://127.0.0.1:8000/api/todo/${editTaskId}/`
+      : "http://127.0.0.1:8000/api/todo/";
+    const method = editMode ? "PUT" : "POST";
+
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/todo/", {
-        method: "POST",
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -85,12 +93,14 @@ const Task = () => {
       if (response.ok) {
         setFormData({ title: "", description: "" });
         setShowForm(false);
+        setEditMode(false);
+        setEditTaskId(null);
         fetchTasks(); // re-fetch to update list
       } else {
-        console.error("Failed to add task");
+        console.error("Failed to submit task");
       }
     } catch (error) {
-      console.error("Error adding task:", error);
+      console.error("Error submitting task:", error);
     }
   };
 
@@ -120,6 +130,46 @@ const Task = () => {
       }
     } catch (error) {
       console.error("Error updating task:", error);
+    }
+  };
+
+  const handleEdit = (task: TaskItem) => {
+    setFormData({
+      title: task.title,
+      description: task.description,
+    });
+    setEditMode(true);
+    setEditTaskId(task.id || null);
+    setShowForm(true);
+  };
+
+  const confirmDelete = (id: number) => {
+    setDeleteTaskId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
+    const token = localStorage.getItem("access_token");
+    try {
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/todo/${deleteTaskId}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      if (response.ok) {
+        fetchTasks(); // refresh list
+        setShowDeleteModal(false);
+        setDeleteTaskId(null);
+      } else {
+        console.error("Failed to delete task");
+      }
+    } catch (error) {
+      console.error("Error deleting task:", error);
     }
   };
 
@@ -161,8 +211,8 @@ const Task = () => {
               setCurrentPage(1);
             }}
             className={`px-3 py-1 rounded-full text-sm ${filter === f
-              ? "bg-indigo-700 text-white"
-              : "bg-gray-200 text-gray-800"
+                ? "bg-indigo-700 text-white"
+                : "bg-gray-200 text-gray-800"
               }`}
           >
             {f}
@@ -182,14 +232,16 @@ const Task = () => {
                 <h2 className="text-lg font-semibold text-gray-800">
                   {task.title}
                 </h2>
-                <span
-                  className={`text-xs px-2 py-1 rounded-full ${task.completed
-                    ? "bg-green-100 text-green-800"
-                    : "bg-yellow-100 text-yellow-800"
-                    }`}
-                >
-                  {task.completed ? "Completed" : "Pending"}
-                </span>
+                <div className="flex gap-2">
+                  <Edit2
+                    className="cursor-pointer text-indigo-500 hover:text-indigo-700"
+                    onClick={() => handleEdit(task)}
+                  />
+                  <Trash2
+                    className="cursor-pointer text-red-500 hover:text-red-700"
+                    onClick={() => confirmDelete(task.id!)}
+                  />
+                </div>
               </div>
               <p className="text-gray-600 mb-2">{task.description}</p>
 
@@ -214,8 +266,8 @@ const Task = () => {
               key={i}
               onClick={() => setCurrentPage(i + 1)}
               className={`w-8 h-8 rounded-full text-sm ${currentPage === i + 1
-                ? "bg-indigo-700 text-white"
-                : "bg-gray-200 text-gray-800"
+                  ? "bg-indigo-700 text-white"
+                  : "bg-gray-200 text-gray-800"
                 }`}
             >
               {i + 1}
@@ -226,7 +278,7 @@ const Task = () => {
 
       {/* Popup Form */}
       {showForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-10 backdrop-blur-sm z-50 flex items-center justify-center">
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-xl w-full max-w-lg shadow-lg relative">
             <button
               className="absolute top-3 right-3 text-gray-500 hover:text-black"
@@ -234,7 +286,9 @@ const Task = () => {
             >
               <X />
             </button>
-            <h2 className="text-xl font-semibold mb-4">Add New Task</h2>
+            <h2 className="text-xl font-semibold mb-4">
+              {editMode ? "Edit Task" : "Add New Task"}
+            </h2>
             <form onSubmit={handleSubmit} className="space-y-4">
               <input
                 type="text"
@@ -258,9 +312,34 @@ const Task = () => {
                 type="submit"
                 className="bg-indigo-700 text-white px-4 py-2 rounded-md hover:bg-indigo-800"
               >
-                Add Task
+                {editMode ? "Update Task" : "Add Task"}
               </button>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Are you sure you want to delete this task?
+            </h2>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
           </div>
         </div>
       )}

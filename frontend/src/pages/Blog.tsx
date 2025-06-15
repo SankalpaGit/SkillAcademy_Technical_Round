@@ -10,6 +10,8 @@ const Blog = () => {
   });
   const [editMode, setEditMode] = useState(false);
   const [editBlogId, setEditBlogId] = useState<number | null>(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleteBlogId, setDeleteBlogId] = useState<number | null>(null);
 
   const toggleForm = () => setShowForm(!showForm);
 
@@ -85,18 +87,28 @@ const Blog = () => {
     toggleForm();
   };
 
-  const handleDelete = async (id: number) => {
+  const confirmDelete = (id: number) => {
+    setDeleteBlogId(id);
+    setShowDeleteModal(true);
+  };
+
+  const handleDelete = async () => {
     const token = localStorage.getItem("access_token");
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/blog/${id}/`, {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await fetch(
+        `http://127.0.0.1:8000/api/blog/${deleteBlogId}/`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
       if (response.ok) {
         fetchBlogs(); // Refresh the blog list
+        setShowDeleteModal(false);
+        setDeleteBlogId(null);
       } else {
         console.error("Failed to delete blog");
       }
@@ -164,6 +176,31 @@ const Blog = () => {
         </div>
       )}
 
+      {/* Delete Confirmation Modal */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg shadow-lg w-full max-w-sm">
+            <h2 className="text-lg font-semibold text-gray-800 mb-4">
+              Are you sure you want to delete this blog?
+            </h2>
+            <div className="flex justify-end gap-4">
+              <button
+                onClick={() => setShowDeleteModal(false)}
+                className="px-4 py-2 bg-gray-300 text-gray-700 rounded-md hover:bg-gray-400"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDelete}
+                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+              >
+                Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Blog Cards */}
       <div className="space-y-6">
         {blogs.map((blog: any, index) => (
@@ -179,13 +216,10 @@ const Blog = () => {
               />
               <Trash2
                 className="cursor-pointer text-red-500 hover:text-red-700"
-                onClick={() => handleDelete(blog.id)}
+                onClick={() => confirmDelete(blog.id)}
               />
             </div>
 
-            <div className="flex flex-wrap gap-2 mb-2">
-
-            </div>
             <h2 className="text-xl font-semibold text-gray-800">
               {blog.title}
             </h2>
